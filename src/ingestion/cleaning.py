@@ -36,9 +36,9 @@ def build_clean_dataframe(records: list[PaperRecord], run_date: datetime) -> pd.
         summary = _clean_text(rec.summary)
         authors = ", ".join([_clean_text(a) for a in rec.authors if a])
         categories = ", ".join([_clean_text(c) for c in rec.categories if c])
-        # Parse published date (ISO string) – fallback to empty string
+        # Parse published date – fallback to empty string
         try:
-            published_dt = datetime.fromisoformat(rec.published)
+            published_dt = pd.to_datetime(rec.published, utc=True).to_pydatetime()
         except Exception:
             published_dt = None
         # Compute age in days relative to run_date

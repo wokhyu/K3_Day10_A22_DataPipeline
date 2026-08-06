@@ -1,0 +1,10 @@
+{
+  "report_name": "phase1_quality",
+  "total_rows": 24,
+  "missing_paper_id": 0,
+  "duplicate_paper_id": 0,
+  "missing_title": 0,
+  "empty_summary": 0,
+  "stale_rows": 0,
+  "passed": true
+}
