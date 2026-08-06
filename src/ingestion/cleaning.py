@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pandas as pd
 
@@ -39,6 +39,8 @@ def build_clean_dataframe(records: list[PaperRecord], run_date: datetime) -> pd.
         # Parse published date (ISO string) – fallback to empty string
         try:
             published_dt = datetime.fromisoformat(rec.published)
+            if published_dt.tzinfo is None:
+                published_dt = published_dt.replace(tzinfo=UTC)
         except Exception:
             published_dt = None
         # Compute age in days relative to run_date
