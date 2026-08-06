@@ -5,6 +5,13 @@ from typing import Any
 import pandas as pd
 
 
+def _as_ground_truth(value: Any) -> str:
+    """Return *value* as a trimmed string, or ``""`` when it is missing."""
+    if value is None or pd.isna(value):
+        return ""
+    return " ".join(str(value).split())
+
+
 def build_test_set(df: pd.DataFrame, output_path) -> list[dict[str, Any]]:
     """Create an evaluation test‑set from a cleaned DataFrame.
 
@@ -33,30 +40,44 @@ def build_test_set(df: pd.DataFrame, output_path) -> list[dict[str, Any]]:
     test_items: list[dict[str, Any]] = []
     for _, row in sampled.iterrows():
         doc_id = row["paper_id"]
-        # Prepare a few generic question types
+        # Prepare a few generic question types, each with its ground truth column
         q_types = {
-            "summary": f"What is the main contribution of the paper titled '{row['title']}'?",
-            "authors": f"Who are the authors of the paper titled '{row['title']}'?",
-            "date": f"When was the paper titled '{row['title']}' published?",
-            "categories": f"What topics does the paper titled '{row['title']}' cover?",
+            "summary": (
+                f"What is the main contribution of the paper titled '{row['title']}'?",
+                row["summary"],
+            ),
+            # The phrasing below is deliberate: retrieval/qa.py routes a question
+            # to the right metadata field by matching these intent phrases, so a
+            # reworded question would silently fall back to the summary branch.
+            "authors": (
+                f"Who authored the paper titled '{row['title']}'?",
+                row["authors_joined"],
+            ),
+            "date": (
+                f"When was the paper titled '{row['title']}' published?",
+                row["published"],
+            ),
+            "categories": (
+                f"What categories does the paper titled '{row['title']}' cover?",
+                row["categories_joined"],
+            ),
         }
-        for q_type, question in q_types.items():
-            ground_truth = None
-            if q_type == "summary":
-                ground_truth = row["summary"]
-            elif q_type == "authors":
-                ground_truth = row["authors_joined"]
-            elif q_type == "date":
-                ground_truth = row["published"]
-            elif q_type == "categories":
-                ground_truth = row["categories_joined"]
+        for q_type, (question, raw_ground_truth) in q_types.items():
+            ground_truth = _as_ground_truth(raw_ground_truth)
+            if not ground_truth:
+                # A missing ground truth cannot be scored – skip it rather than
+                # writing NaN into the frozen test set.
+                continue
             test_items.append({
                 "id": f"{doc_id}_{q_type}",
                 "question_type": q_type,
                 "question": question,
                 "ground_truth": ground_truth,
-                "ground_truth_doc_ids": doc_id,
+                "ground_truth_doc_ids": [doc_id],
             })
+
+    if not test_items:
+        raise ValueError("No test items could be built – every ground truth was empty.")
 
     # Write JSON file
     output_path_obj = Path(output_path)

@@ -1,0 +1,32 @@
+[
+  {
+    "type": "drop",
+    "count": 1,
+    "description": "Dropped latest records"
+  },
+  {
+    "type": "blank_summary",
+    "count": 2,
+    "description": "Blanked out summaries"
+  },
+  {
+    "type": "inject_noise",
+    "count": 2,
+    "description": "Injected noise into titles"
+  },
+  {
+    "type": "truncate_title",
+    "count": 2,
+    "description": "Truncated titles"
+  },
+  {
+    "type": "stale_date",
+    "count": 2,
+    "description": "Made published dates older"
+  },
+  {
+    "type": "duplicate_rows",
+    "count": 2,
+    "description": "Added duplicate rows"
+  }
+]
